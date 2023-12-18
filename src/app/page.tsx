@@ -1,11 +1,34 @@
 "use client"
-import Image from 'next/image'
-import { Bubble, ToggleButton, Footer } from '@/components'
-import fetchJson from '@/fetch-json'
-import useSWR from 'swr'
-import { FormEvent } from 'react'
+import { ToggleButton } from '@/components'
+import { useState } from 'react'
+
 
 const Home = () => {
+  const [givenPrompt, setGivenPrompt] = useState<string>("")
+  const [message, setMessage] = useState<any>([])
+
+  const onChangeHandler = (e: any) => {
+    setGivenPrompt(e.target.value)
+  }
+  const onHandleSubmit = async (e: any) => {
+    e.preventDefault()
+    console.log(givenPrompt)
+    const option = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prompt: givenPrompt })
+    }
+    try {
+      'use server'
+      const resp = await fetch("/api/prompt", option)
+      const data = await resp.json()
+      setMessage(data.apiResponse)
+    } catch (error) {
+      console.log(error)
+    }
+  }
   return (
     <main className="flex flex-col items-center justify-center h-screen">
       <section className='chatbot-section flex flex-col origin:w-[800px] w-full origin:h-[735px] h-full rounded-md p-2 md:p-6'>
@@ -29,12 +52,13 @@ const Home = () => {
           <p className="mt-2 text-sm chatbot-text-secondary-inverse md:text-base md:mt-4">Chatting with the Astra chatbot is a breeze! Simply type your questions or requests in a clear and concise manner. Responses are sourced from Astra documentation and a link for further reading is provided.</p>
         </div>
         <div className='relative flex-1 my-4 overflow-y-auto md:my-6'>
-          <div className='absolute w-full overflow-x-hidden'>
-            <Bubble key={`message-${1}`} content={"hii an jasveer"} />
+
+          <div className='absolute w-full overflow-x-hidden text-white'>
+            {message && message?.candidates?.map((message: any, index: number) => <div className="text-white" key={index}>{message?.output}</div>)}
           </div>
         </div>
-        <form className='flex h-[40px] gap-2'>
-          <input className='flex-1 p-2 text-sm bg-transparent rounded-md outline-none chatbot-input md:text-base' placeholder='Send a message...' />
+        <form onSubmit={onHandleSubmit} className='flex h-[40px] gap-2'>
+          <input onChange={onChangeHandler} className='flex-1 p-2 text-sm bg-transparent rounded-md outline-none chatbot-input md:text-base' placeholder='Send a message...' />
           <button type="submit" className='chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3'>
             <svg width="20" height="20" viewBox="0 0 20 20">
               <path d="M2.925 5.025L9.18333 7.70833L2.91667 6.875L2.925 5.025ZM9.175 12.2917L2.91667 14.975V13.125L9.175 12.2917ZM1.25833 2.5L1.25 8.33333L13.75 10L1.25 11.6667L1.25833 17.5L18.75 10L1.25833 2.5Z" />
